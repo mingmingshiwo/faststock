@@ -1,0 +1,9 @@
+CREATE TABLE `operate_log` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+	`user_id` INT(11) COMMENT '用户id',
+	`user_name` VARCHAR(100) COMMENT '用户名',
+	`interface_url` VARCHAR(255) COMMENT '接口路径',
+	`cost` INT(11) COMMENT '接口耗时 毫秒',
+	`add_time` DATE COMMENT '添加日期',
+	PRIMARY KEY (`id`)
+)ENGINE=INNODB DEFAULT CHARSET=utf8
