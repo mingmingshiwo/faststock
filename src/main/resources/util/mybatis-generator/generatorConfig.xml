@@ -43,9 +43,10 @@
                selectByExampleQueryId="false">
             <!--<columnRenamingRule searchString="^D_"
                                 replaceString=""/>-->
-            <columnOverride column="id" javaType="java.lang.Long"/>
-            <columnOverride column="user_id" javaType="java.lang.Long"/>
-            <columnOverride column="cost" javaType="java.lang.Long"/>
+            <!--不需要用long，因为mysql表的字段类型为int-->
+            <!--<columnOverride column="id" javaType="java.lang.Long"/>-->
+            <!--<columnOverride column="user_id" javaType="java.lang.Long"/>-->
+            <!--<columnOverride column="cost" javaType="java.lang.Long"/>-->
         </table>
 
     </context>

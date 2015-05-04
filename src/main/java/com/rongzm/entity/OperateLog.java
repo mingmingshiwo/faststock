@@ -3,31 +3,31 @@ package com.rongzm.entity;
 import java.util.Date;
 
 public class OperateLog {
-    private Long id;
+    private Integer id;
 
-    private Long userId;
+    private Integer userId;
 
     private String userName;
 
     private String interfaceUrl;
 
-    private Long cost;
+    private Integer cost;
 
     private Date addTime;
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
@@ -47,11 +47,11 @@ public class OperateLog {
         this.interfaceUrl = interfaceUrl == null ? null : interfaceUrl.trim();
     }
 
-    public Long getCost() {
+    public Integer getCost() {
         return cost;
     }
 
-    public void setCost(Long cost) {
+    public void setCost(Integer cost) {
         this.cost = cost;
     }
 

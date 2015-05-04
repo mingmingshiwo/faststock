@@ -21,7 +21,7 @@ public class OperateLogServiceImpl implements OperateLogService{
     }
 
     @Override
-    public OperateLog query(long id) {
+    public OperateLog query(int id) {
         return mapper.selectByPrimaryKey(id);
     }
 }

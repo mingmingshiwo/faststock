@@ -8,5 +8,5 @@ import com.rongzm.entity.OperateLog;
 public interface OperateLogService {
     int add(OperateLog operateLog);
 
-    OperateLog query(long id);
+    OperateLog query(int id);
 }
