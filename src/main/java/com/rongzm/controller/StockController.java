@@ -13,18 +13,18 @@ import javax.annotation.Resource;
  * Created by rongzhiming on 2015/5/8.
  */
 @RestController
-@RequestMapping("/stock")
+@RequestMapping(value = "/stock")
 public class StockController {
     @Resource(name="StockServiceCacheImpl")
     private StockService stockService;
 
     @RequestMapping(value="/amount/{itemId}",method={RequestMethod.GET})
-    public Integer amount(@PathVariable("itemId") Integer itemId){
+    public Integer amount(@PathVariable(value = "itemId") Integer itemId){
         return stockService.queryAmount(itemId);
     }
 
     @RequestMapping(value="/buy/{itemId}/{num}", method={RequestMethod.POST,RequestMethod.GET})
-    public Boolean buy(@PathVariable("itemId") Integer itemId, @PathVariable("num") Integer num){
+    public Boolean buy(@PathVariable(value = "itemId") Integer itemId, @PathVariable(value = "num") Integer num){
         return stockService.decreaseAmount(itemId,num);
     }
 }
