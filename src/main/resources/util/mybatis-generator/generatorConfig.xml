@@ -37,9 +37,11 @@
                enableDeleteByExample="false" enableSelectByExample="false"
                selectByExampleQueryId="false"/>-->
 
-        <table tableName="operate_log" domainObjectName="OperateLog"
-               enableCountByExample="false" enableUpdateByExample="false"
-               enableDeleteByExample="false" enableSelectByExample="false"
+        <table tableName="stock" domainObjectName="Stock"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false"
                selectByExampleQueryId="false">
             <!--<columnRenamingRule searchString="^D_"
                                 replaceString=""/>-->
