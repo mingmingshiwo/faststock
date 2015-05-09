@@ -17,7 +17,7 @@ import javax.annotation.Resource;
  * Created by rongzhiming on 2015/5/4.
  */
 @Configuration
-@PropertySource(value = {"application-db.properties","application-tomcat.properties"})
+@PropertySource(value = {"application-db.properties","application-tomcat.properties","application-log.properties"})
 @MapperScan("com.rongzm.mapper")
 public class Config {
 

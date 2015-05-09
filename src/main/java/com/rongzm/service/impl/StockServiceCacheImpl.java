@@ -1,6 +1,7 @@
 package com.rongzm.service.impl;
 
 import com.rongzm.entity.Stock;
+import com.rongzm.pojo.AmountResult;
 import com.rongzm.service.StockService;
 import com.rongzm.utils.Constants;
 import com.rongzm.utils.RedisKeyConstants;
@@ -26,6 +27,8 @@ public class StockServiceCacheImpl implements StockService {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
+    private final static Long AMOUNT_NOT_ENOUGH = -999l;
+
     @Autowired
     private StringRedisTemplate redisTemplate;
 
@@ -34,62 +37,81 @@ public class StockServiceCacheImpl implements StockService {
 
     @Override
     public Integer queryAmount(int itemId) {
+        AmountResult amountResult = queryAmount_(itemId);
+        return amountResult.getAmount();
+    }
+
+    public AmountResult queryAmount_ (int itemId){
         String key = RedisKeyConstants.AMOUNT.key(itemId);
         BoundValueOperations<String,String> operations = redisTemplate.boundValueOps(key);
         String amount = operations.get();
         if(amount == null){
             Integer amountDb = stockService.queryAmount(itemId);
             if(amountDb == null){
-                return null;
+                throw new RuntimeException("stock not exist");
             }
 
             Boolean noConcurrent = operations.setIfAbsent(String.valueOf(amountDb));//并发
             if(noConcurrent){
+                //how to return
                 operations.expire(Constants.REDIS_TIME_OUT, TimeUnit.MINUTES);
-                return amountDb;
+                return new AmountResult(amountDb,true);
             }else{
                 amount = operations.get();
                 if(amount == null){
-                    throw new RuntimeException("");
+                    throw new RuntimeException("Value not exist. But expect exist!");
                 }
-                return Integer.valueOf(amount);
+                return new AmountResult(Integer.valueOf(amount), false);
             }
         }else{
-            return Integer.valueOf(amount);
+            return new AmountResult(Integer.valueOf(amount), false);
         }
     }
 
     @Override
-    public boolean decreaseAmount(int itemId, final int step) {
-        String key = RedisKeyConstants.AMOUNT.key(itemId);
-        final BoundValueOperations<String,String> operations = redisTemplate.boundValueOps(key);
+    public boolean decreaseAmount(final int itemId, final int step) {
+        final String key = RedisKeyConstants.AMOUNT.key(itemId);
 
         int retry = 0;
         while(retry <= Constants.REDIS_RETRY){
-            redisTemplate.watch(key);
-            int amount = queryAmount(itemId);
-            if(amount < step){
-                break;
-            }
-            List<Object> txResults = redisTemplate.execute(new SessionCallback<List<Object>>() {
+            Long txResult = redisTemplate.execute(new SessionCallback<Long>() {
                 @Override
-                public List<Object> execute(RedisOperations oper) throws DataAccessException {
-                    redisTemplate.multi();
-                    operations.increment(-step);
-                    return redisTemplate.exec();
+                @SuppressWarnings("unchecked")
+                public Long execute(RedisOperations operations) throws DataAccessException {
+                    operations.watch(key);
+                    AmountResult amountResult = queryAmount_(itemId);
+                    if (amountResult.isInitCache()) {
+                        operations.watch(key);
+                        amountResult = queryAmount_(itemId);
+                    }
+                    Integer amount = amountResult.getAmount();
+                    if (amount == null || amount < step) {
+                        operations.unwatch();
+                        return AMOUNT_NOT_ENOUGH;
+                    }
+
+                    operations.multi();
+                    operations.opsForValue().increment(key, -step);
+                    List<Object> list = operations.exec();
+                    if (CollectionUtils.isEmpty(list)) {
+                        return null;
+                    } else {
+                        return (Long) list.get(0);
+                    }
                 }
             });
-            log.info("[exec]" + txResults);
-            if(CollectionUtils.isNotEmpty(txResults) && txResults.get(0) != null){
-                log.info("[suc]" + retry);
-                return true;
-            }else{
+
+            if(txResult == null){//transaction fail
                 retry++;
+            }else if(AMOUNT_NOT_ENOUGH.equals(txResult)){
+                break;
+            }else{
+                log.info("suc [oldAmount]{} [retry]{}",txResult, retry);
+                return true;
             }
         }
 
-        log.info("[fail]" + retry);
-        redisTemplate.unwatch();
+        log.info("fail [retry]{}", retry);
         return false;
     }
 

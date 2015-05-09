@@ -5,20 +5,34 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by rongzhiming on 2015/5/9.
  */
 public class StockControllerTest {
     public static void main(String[] args) throws Exception{
+        System.setProperty( "org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog" ); //关闭日志
+//        Logger.getRootLogger().setLevel(Level.INFO);
+//
+//        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+//        System.setProperty("org.apache.commons.logging.Simplelog.defaultlog", "info");
+//
+        Logger.getLogger("global").setLevel(Level.SEVERE);
+        Logger.getLogger("wtf").log(Level.INFO,"fuck");
+
+//        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+//        System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "false");
+//        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "stdout");
+
+
+
+
         final String url = "http://localhost:9001/fs/stock/buy/1/1";
         final HttpClientBuilder builder = HttpClientBuilder.create();
 
@@ -26,7 +40,7 @@ public class StockControllerTest {
         List<Future<String>> results = new ArrayList<Future<String>>();
         long start = System.currentTimeMillis();
 
-        int concurrent = 1000;
+        int concurrent = 220;
         for(int i=0;i<concurrent;i++){
             Future<String> future = exec.submit(new Callable<String>() {
                 @Override
@@ -48,5 +62,8 @@ public class StockControllerTest {
         long cast = System.currentTimeMillis() - start;
         System.out.println("[cast]" + cast);
         System.out.println(suc);
+
+        exec.shutdown();
+        exec.awaitTermination(1, TimeUnit.MINUTES);
     }
 }
