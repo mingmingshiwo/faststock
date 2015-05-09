@@ -4,10 +4,14 @@ import com.rongzm.entity.Stock;
 import com.rongzm.service.StockService;
 import com.rongzm.utils.Constants;
 import com.rongzm.utils.RedisKeyConstants;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.BoundValueOperations;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -56,20 +60,36 @@ public class StockServiceCacheImpl implements StockService {
     }
 
     @Override
-    public boolean decreaseAmount(int itemId, int step) {
+    public boolean decreaseAmount(int itemId, final int step) {
         String key = RedisKeyConstants.AMOUNT.key(itemId);
-        redisTemplate.watch(key);
+        final BoundValueOperations<String,String> operations = redisTemplate.boundValueOps(key);
 
+        int retry = 0;
+        while(retry <= Constants.REDIS_RETRY){
+            redisTemplate.watch(key);
+            int amount = queryAmount(itemId);
+            if(amount < step){
+                break;
+            }
+            List<Object> txResults = redisTemplate.execute(new SessionCallback<List<Object>>() {
+                @Override
+                public List<Object> execute(RedisOperations oper) throws DataAccessException {
+                    redisTemplate.multi();
+                    operations.increment(-step);
+                    return redisTemplate.exec();
+                }
+            });
+            log.info("[exec]" + txResults);
+            if(CollectionUtils.isNotEmpty(txResults) && txResults.get(0) != null){
+                log.info("[suc]" + retry);
+                return true;
+            }else{
+                retry++;
+            }
+        }
 
-
-        redisTemplate.multi();
-        BoundValueOperations<String,String> operations = redisTemplate.boundValueOps(key);
-        operations.increment(-step);
-        List<Object> result = redisTemplate.exec();
-        log.debug("[exec]" + result);
-
-
-
+        log.info("[fail]" + retry);
+        redisTemplate.unwatch();
         return false;
     }
 

@@ -6,5 +6,5 @@ package com.rongzm.utils;
 public class Constants {
     public static final Integer REDIS_TIME_OUT = 1;
 
-    public static final int RETRY = 10;
+    public static final int REDIS_RETRY = 100;
 }
